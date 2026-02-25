@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Prayer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px;
+            margin: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-bottom: 5px solid #000;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+        }
+        .header-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        .lyrics {
+            padding: 0 20px;
+            line-height: 1.6;
+            font-size: 18px;
+            color: #333;
+            font-weight: 500;
+        }
+        .player-card {
+            background-color: #fff5f5;
+            margin: 15px 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .progress-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        input[type="range"] {
+            flex-grow: 1;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-around;
+            padding: 0 10px;
+        }
+        .btn {
+            background: #808080; 
+            color: white;
+            border: 2px solid #555;
+            border-radius: 25px;
+            padding: 8px 0;
+            width: 30%;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .btn.downloaded {
+            background: #28a745 !important;
+            border-color: #1e7e34;
+        }
+        .btn:active {
+            transform: translateY(2px);
+        }
+        .lyrics-part { display: none; }
+        .lyrics-part.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="header-title" id="main-title">বন্দে মাতরম্</div>
+    <div id="stanza-container"></div>
+
+    <script>
+        const musicData = {
+            1: { 
+                clip: 'https://www.dropbox.com/scl/fi/7zlsgnqd7sv8hl3799w9t/BandeMataramPart1.mp3?rlkey=sd622iuessf0hl9canyj1jjes&st=37ep3mb4&raw=1', 
+                segment: 'https://www.dropbox.com/scl/fi/7zlsgnqd7sv8hl3799w9t/BandeMataramPart1.mp3?rlkey=sd622iuessf0hl9canyj1jjes&st=37ep3mb4&raw=1',
+                full: 'https://www.dropbox.com/scl/fi/k7qprf0cizdtajw74n4i8/BandeMataram.mp3?rlkey=hu2y9accnqn48pxv1io8u90fo&st=5yj945hn&raw=1' 
+            },
+            2: { 
+                clip: 'https://www.dropbox.com/scl/fi/uigokffblz6tvp6y4ooq8/BandeMataramPart2Clip.mp3?rlkey=ox3ndbvdkkr2r0l0blrl2d8uu&st=hgj7htig&raw=1', 
+                segment: 'https://www.dropbox.com/scl/fi/r1wllsftvotelrxzqqekw/BandeMataramPart2Segment.mp3?rlkey=uav8la6dw7r8v0x4t2bc24oo7&st=rta62q8o&raw=1', 
+                full: 'https://www.dropbox.com/scl/fi/k7qprf0cizdtajw74n4i8/BandeMataram.mp3?rlkey=hu2y9accnqn48pxv1io8u90fo&st=5yj945hn&raw=1' 
+            },
+            3: { 
+            	clip: 'https://www.dropbox.com/scl/fi/hnzeo80g0tfdvwmltnmho/BandeMataramPart3Clip.mp3?rlkey=z1pul3zupuj8rdxkkilbj3j29&st=2t9fgv93&raw=1', 
+            	segment: 'https://www.dropbox.com/scl/fi/la0lag7ym91qqsjwhcc76/BandeMataramPart3Segment.mp3?rlkey=uytl5h25karp9phybtrssh91e&st=pxxu6fm4&raw=1', 
+            	full: 'https://www.dropbox.com/scl/fi/k7qprf0cizdtajw74n4i8/BandeMataram.mp3?rlkey=hu2y9accnqn48pxv1io8u90fo&st=5yj945hn&raw=1' },
+
+            4: { 
+            	clip: 'https://www.dropbox.com/scl/fi/3nvx4ju34k3l1pqjoq2hr/BandeMataramPart4Clip.mp3?rlkey=gyp7yilhr8b6wupm7os8kdll3&st=rkz6d79l&raw=1', 
+                segment: 'https://www.dropbox.com/scl/fi/ntru2b7qkii8t6e60h24n/BandeMataramPart4Segment.mp3?rlkey=5qvjqau7duumnzs4nfthmzqur&st=fy80wezn&raw=1', 
+                full: 'https://www.dropbox.com/scl/fi/k7qprf0cizdtajw74n4i8/BandeMataram.mp3?rlkey=hu2y9accnqn48pxv1io8u90fo&st=5yj945hn&raw=1' },
+
+            5: { 
+            	clip: 'https://www.dropbox.com/scl/fi/qvwt1ddf8g8rgnk36pgi0/BandeMataramPart5Clip.mp3?rlkey=x8opdzi738m8ogvuldq4o95ul&st=q1gwru14&raw=1', 
+            	segment: 'https://www.dropbox.com/scl/fi/upvgzxlqw4i5seow6o4ar/BandeMataramPart5Segment.mp3?rlkey=mupnzqo9p2l6sv2llnlluq9m9&st=60bd5v01&raw=1', 
+            	full: 'https://www.dropbox.com/scl/fi/k7qprf0cizdtajw74n4i8/BandeMataram.mp3?rlkey=hu2y9accnqn48pxv1io8u90fo&st=5yj945hn&raw=1' },
+
+            6: { 
+            	clip: 'https://www.dropbox.com/scl/fi/p87r7oasu390f6tum81f1/BandeMataramPart6Clip.mp3?rlkey=fvqn0hwphoz07u2f9pyvgwmap&st=flzyk7dg&raw=1', 
+            	segment: 'https://www.dropbox.com/scl/fi/k94lojg6isujruppc2wrf/BandeMataramPart6Segment.mp3?rlkey=1hjyb3urs40izvotxkrb4qvqw&st=utvzv10m&raw=1', 
+            	full: 'https://www.dropbox.com/scl/fi/k7qprf0cizdtajw74n4i8/BandeMataram.mp3?rlkey=hu2y9accnqn48pxv1io8u90fo&st=5yj945hn&raw=1' }
+        };
+
+        const stanzas = [
+            { text: " <hr>বন্দে মাতরম্। <br> বন্দে মাতরম্।<br> সুজলাং সুফলাং মলয়জ-শীতলাম্, <br> শস্যশ্যামলাং মাতরম্। <br> বন্দে মাতরম্।<hr> বন্দে মাতরম্। <br> বন্দে মাতরম্।<br> সুজলাং সুফলাং মলয়জ-শীতলাম্, <br> শস্যশ্যামলাং মাতরম্। <br> বন্দে মাতরম্। <hr> বন্দে মাতরম্। <br> বন্দে মাতরম্। <br> সুজলাং সুফলাং মলয়জশীতলাম্ <br> শস্যশ্যামলাং মাতরম্! <br> বন্দে মাতরম্। <br><br> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-দ্রুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <br> <br> ​কোটীকোটীকণ্ঠ-কল-কল-নিনাদ করালে, <br> কোটীকোটীভুজৈধৃতখরকরবালে, <br> অবলা কেন মা এত বলে! <br> বহুবলধারিণীং নমামি তারিণীং <br> রিপুদলবারিণীং মাতরম্। <br> বন্দে মাতরম্। <br> <br> ​তুমি বিদ্যা তুমি ধর্ম্ম <br> তুমি হৃদি তুমি মর্ম্ম <br> ত্বং হি প্রাণাঃ শরীরে। <br> বাহুতে তুমি মা শক্তি, <br> হৃদয়ে তুমি মা ভক্তি, <br> তোমারই প্রতিমা গড়ি মন্দিরে মন্দিরে। <br> বন্দে মাতরম্। <br> <br> ​ত্বং হি দুর্গা দশপ্রহরণধারিণী <br> কমলা কমল-দলবিহারিণী <br> বাণী বিদ্যাদায়িনী নমামি ত্বাং <br> নমামি কমলাং অমলাং অতুলাম্, <br> সুজলাং সুফলাং মাতরম্ <br> বন্দে মাতরম্। <br> <br> শ্যামলাং সরলাং সুস্মিতাং ভূষিতাম্ <br> ধরণীং ভরণীং মাতরম্। <br> বন্দে মাতরম্। <br> বন্দে মাতরম্। <hr>", id: 1 }, 
+            { text: " <hr> বন্দে মাতরম্। <br> বন্দে মাতরম্। <br> সুজলাং সুফলাং মলয়জশীতলাম্ <br> শস্যশ্যামলাং মাতরম্! <br> বন্দে মাতরম্। <br><br> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-দ্রুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <hr> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-দ্রুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <hr> বন্দে মাতরম্। <br> বন্দে মাতরম্। <br> সুজলাং সুফলাং মলয়জশীতলাম্ <br> শস্যশ্যামলাং মাতরম্! <br> বন্দে মাতরম্। <br><br> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-দ্রুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <br> <br> ​কোটীকোটীকণ্ঠ-কল-কল-নিনাদ করালে, <br> কোটীকোটীভুজৈধৃতখরকরবালে, <br> অবলা কেন মা এত বলে! <br> বহুবলধারিণীং নমামি তারিণীং <br> রিপুদলবারিণীং মাতরম্। <br> বন্দে মাতরম্। <br> <br> ​তুমি বিদ্যা তুমি ধর্ম্ম <br> তুমি হৃদি তুমি মর্ম্ম <br> ত্বং হি প্রাণাঃ শরীরে। <br> বাহুতে তুমি মা শক্তি, <br> হৃদয়ে তুমি মা ভক্তি, <br> তোমারই প্রতিমা গড়ি মন্দিরে মন্দিরে। <br> বন্দে মাতরম্। <br> <br> ​ত্বং হি দুর্গা দশপ্রহরণধারিণী <br> কমলা কমল-দলবিহারিণী <br> বাণী বিদ্যাদায়িনী নমামি ত্বাং <br> নমামি কমলাং অমলাং অতুলাম্, <br> সুজলাং সুফলাং মাতরম্ <br> বন্দে মাতরম্। <br> <br> শ্যামলাং সরলাং সুস্মিতাং ভূষিতাম্ <br> ধরণীং ভরণীং মাতরম্। <br> বন্দে মাতরম্। <br> বন্দে মাতরম্। <hr>", id: 2 }, 
+            { text: " <hr> বন্দে মাতরম্। <br> বন্দে মাতরম্। <br> সুজলাং সুফলাং মলয়জশীতলাম্ <br> শস্যশ্যামলাং মাতরম্! <br> বন্দে মাতরম্। <br><br> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-দ্রুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <br> <br> ​কোটীকোটীকণ্ঠ-কল-কল-nিনাদ করালে, <br> কোটীকোটীভুজৈধৃতখরকরবালে, <br> অবলা কেন মা এত বলে! <br> বহুবলধারিণীং নমামি তারিণীং <br> রিপুদলবারিণীং মাতরম্। <br> বন্দে মাতরম্। <hr> কোটীকোটীকণ্ঠ-কল-কল-নিনাদ করালে, <br> কোটীকোটীভুজৈধৃতখরকরবালে, <br> অবলা কেন মা এত বলে! <br> বহুবলধারিণীং নমামি তারিণীং <br> রিপুদলবারিণীং মাতরম্। <br> বন্দে মাতরম্। <hr> বন্দে মাতরম্। <br> বন্দে মাতরম্। <br> সুজলাং সুফলাং মলয়জশীতলাম্ <br> শস্যশ্যামলাং মাতরম্! <br> বন্দে মাতরম্। <br><br> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-দ্রুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <br> <br> ​কোটীকোটীকণ্ঠ-কল-কল-নিনাদ করালে, <br> কোটীকোটীভুজৈধৃতখরকরবালে, <br> অবলা কেন মা এত বলে! <br> বহুবলধারিণীং নমামি তারিণীং <br> রিপুদলবারিণীং মাতরম্। <br> বন্দে মাতরম্। <br> <br> ​তুমি বিদ্যা তুমি ধর্ম্ম <br> তুমি হৃদি তুমি মর্ম্ম <br> ত্বং হি প্রাণাঃ শরীরে। <br> বাহুতে তুমি মা শক্তি, <br> হৃদয়ে তুমি মা ভক্তি, <br> তোমারই প্রতিমা গড়ি মন্দিরে মন্দিরে। <br> বন্দে মাতরম্। <br> <br> ​ত্বং হি দুর্গা দশপ্রহরণধারিণী <br> কমলা কমল-দলবিহারিণী <br> বাণী বিদ্যাদায়িনী নমামি ত্বাং <br> নমামি কমলাং অমলাং অতুলাম্, <br> সুজলাং সুফলাং মাতরম্ <br> বন্দে মাতরম্। <br> <br> শ্যামলাং সরলাং সুস্মিতাং ভূষিতাম্ <br> ধরণীং ভরণীং মাতরম্। <br> বন্দে মাতরম্। <br> বন্দে মাতরম্। <hr>", id: 3 }, 
+            { text: " <hr> বন্দে মাতরম্। <br> বন্দে মাতরম্। <br> সুজলাং সুফলাং মলয়জশীতলাম্ <br> শস্যশ্যামলাং মাতরম্! <br> বন্দে মাতরম্। <br><br> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-द्रুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <br> <br> ​কোটীকোটীকণ্ঠ-কল-কল-নিনাদ করালে, <br> কোটীকোটীভুজৈধৃতখরকরবালে, <br> অবলা কেন মা এত বলে! <br> বহুবলধারিণীং নমামি তারিণীং <br> রিপুদলবারিণীং মাতরম্। <br> বন্দে মাতরম্। <br> <br> ​তুমি বিদ্যা তুমি ধর্ম্ম <br> তুমি হৃদি তুমি মর্ম্ম <br> ত্বং হি প্রাণাঃ শরীরে। <br> বাহুতে তুমি মা শক্তি, <br> হৃদয়ে তুমি মা ভক্তি, <br> তোমারই প্রতিমা গড়ি মন্দিরে মন্দিরে। <br> বন্দে মাতরম্। <hr> তুমি বিদ্যা তুমি ধর্ম্ম <br> তুমি হৃদি তুমি মর্ম্ম <br> ত্বং হি প্রাণাঃ শরীরে। <br> বাহুতে তুমি মা শক্তি, <br> হৃদয়ে তুমি মা ফক্তি, <br> তোমারই প্রতিমা গড়ি মন্দিরে মন্দিরে। <br> বন্দে মাতরম্। <hr> বন্দে মাতরম্। <br> বন্দে মাতরম্। <br> সুজলাং সুফলাং মলয়জশীতলাম্ <br> শস্যশ্যামলাং মাতরম্! <br> বন্দে মাতরম্। <br><br> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-দ্রুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <br> <br> ​কোটীকোটীকণ্ঠ-কল-কল-নিনাদ করালে, <br> কোটীকোটীভুজৈধৃতখরকরবালে, <br> অবলা কেন মা এত বলে! <br> বহুবলধারিণীং নমামি তারিণীং <br> রিপুদলবারিণীং মাতরম্। <br> বন্দে মাতরম্। <br> <br> ​তুমি বিদ্যা তুমি ধর্ম্ম <br> তুমি হৃদি তুমি মর্ম্ম <br> ত্বং হি প্রাণাঃ শরীরে। <br> বাহুতে তুমি মা শক্তি, <br> হৃদয়ে তুমি মা ভক্তি, <br> তোমারই প্রতিমা গড়ি মন্দিরে মন্দিরে। <br> বন্দে মাতরম্। <br> <br> ​ত্বং হি দুর্গা দশপ্রহরণধারিণী <br> কমলা কমল-দলবিহারিণী <br> বাণী বিদ্যাদায়িনী নমামি ত্বাং <br> নমামি কমলাং অমলাং অতুলাম্, <br> সুজলাং সুফলাং মাতরম্ <br> বন্দে মাতরম্। <br> <br> শ্যামলাং সরলাং সুস্মিতাং ভূষিতাম্ <br> ধরণীং ভরণীং মাতরম্। <br> বন্দে মাতরম্। <br> বন্দে মাতরম্। <hr>", id: 4 }, 
+            { text: " <hr> বন্দে মাতরম্। <br> বন্দে মাতরম্। <br> সুজলাং সুফলাং মলয়জশীতলাম্ <br> শস্যশ্যামলাং মাতরম্! <br> বন্দে মাতরম্। <br><br> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-দ্রুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <br> <br> ​কোটীকোটীকণ্ঠ-কল-কল-নিনাদ করালে, <br> কোটীকোটীভুজৈধৃতখরকরবালে, <br> অবলা কেন মা এত বলে! <br> বহুবলধারিণীং নমামি তারিণীং <br> রিপুদলবারিণীং মাতরম্। <br> বন্দে মাতরম্। <br> <br> ​তুমি বিদ্যা তুমি ধর্ম্ম <br> তুমি হৃদি তুমি মর্ম্ম <br> ত্বং হি প্রাণাঃ শরীরে। <br> বাহুতে তুমি মা শক্তি, <br> হৃদয়ে তুমি মা ভক্তি, <br> তোমারই প্রতিমা গড়ি মন্দিরে মন্দিরে। <br> বন্দে মাতরম্। <br> <br> ​ত্বং হি দুর্গা দশপ্রহরণধারিণী <br> কমলা কমল-দলবিহারিণী <br> বাণী বিদ্যাদায়িনী নমামি ত্বাং <br> নমামি কমলাং অমলাং অতুলাম্, <br> সুজলাং সুফলাং মাতরম্ <br> বন্দে মাতরম্। <hr> ত্বং হি দুর্গা দশপ্রহরণধারিণী <br> কমলা কমল-দলবিহারিণী <br> বাণী বিদ্যাদায়িনী নমামি ত্বাং <br> নমামি কমলাং অমলাং অতুলাম্, <br> সুজলাং সুফলাং মাতরম্ <br> বন্দে মাতরম্। <hr> বন্দে মাতরম্। <br> বন্দে মাতরম্। <br> সুজলাং সুফলাং মলয়জশীতলাম্ <br> শস্যশ্যামলাং মাতরম্! <br> বন্দে মাতরম্। <br><br> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-দ্রুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <br> <br> ​কোটীকোটীকণ্ঠ-কল-কল-নিনাদ করালে, <br> কোটীকোটীভুজৈধৃতখরকরবালে, <br> অবলা কেন মা এত বলে! <br> বহুবলধারিণীং নমামি তারিণীং <br> রিপুদলবারিণীং মাতরম্। <br> বন্দে মাতরম্। <br> <br> ​তুমি বিদ্যা তুমি ধর্ম্ম <br> তুমি হৃদি তুমি মর্ম্ম <br> ত্বং হি প্রাণাঃ শরীরে। <br> বাহুতে তুমি মা শক্তি, <br> হৃদয়ে তুমি মা ভক্তি, <br> তোমারই প্রতিমা গড়ি মন্দিরে মন্দিরে। <br> বন্দে মাতরম্। <br> <br> ​ত্বং হি দুর্গা দশপ্রহরণধারিণী <br> কমলা কমল-দলবিহারিণী <br> বাণী বিদ্যাদায়িনী নমামি ত্বাং <br> নমামি কমলাং অমলাং অতুলাম্, <br> সুজলাং সুফলাং মাতরম্ <br> বন্দে মাতরম্। <br> <br> শ্যামলাং সরলাং সুস্মিতাং ভূষিতাম্ <br> ধরণীং ভরণীং মাতরম্। <br> বন্দে মাতরম্। <br> বন্দে মাতরম্। <hr>", id: 5 }, 
+            { text: " <hr> বন্দে মাতরম্। <br> বন্দে মাতরম্। <br> সুজলাং সুফলাং মলয়জশীতলাম্ <br> শস্যশ্যামলাং মাতরম্! <br> বন্দে মাতরম্। <br><br> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-দ্রুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <br> <br> ​কোটীকোটীকণ্ঠ-কল-কল-নিনাদ করালে, <br> কোটীকোটীভুজৈধৃতখরকরবালে, <br> অবলা কেন মা এত বলে! <br> বহুবলধারিণীং নমামি তারিণীং <br> রিপুদলবারিণীং মাতরম্। <br> বন্দে মাতরম্। <br> <br> ​তুমি বিদ্যা তুমি ধর্ম্ম <br> তুমি হৃদি তুমি মর্ম্ম <br> ত্বং হি প্রাণাঃ শরীরে। <br> বাহুতে তুমি মা শক্তি, <br> হৃদয়ে তুমি মা ভক্তি, <br> তোমারই প্রতিমা গড়ি মন্দিরে মন্দিরে। <br> বন্দে মাতরম্। <br> <br> ​ত্বং হি দুর্গা দশপ্রহরণধারিণী <br> কমলা কমল-দলবিহারিণী <br> বাণী বিদ্যাদায়িনী নমামি ত্বাং <br> নমামি কমলাং অমলাং অতুলাম্, <br> সুজলাং সুফলাং মাতরম্ <br> বন্দে মাতরম্। <br> <br> শ্যামলাং সরলাং সুস্মিতাং ভূষিতাম্ <br> ধরণীং ভরণীং মাতরম্। <br> বন্দে মাতরম্। <br> বন্দে মাতরম্। <hr> শ্যামলাং সরলাং সুস্মিতাং ভূষিতাম্ <br> ধরণীং ভরণীং মাতরম্। <br> বন্দে মাতরম্। <br> বন্দে মাতরম্। <hr> বন্দে মাতরম্। <br> বন্দে মাতরম্। <br> সুজলাং সুফলাং মলয়জশীতলাম্ <br> শস্যশ্যামলাং মাতরম্! <br> বন্দে মাতরম্। <br><br> শুভ্র-জ্যোৎস্না-পুলকিত-যামিনীম্, <br> ফুল্লকুসুমিত-দ্রুমদলশোভিনীম্, <br> সুহাসিনীং সুমধুরভাষিণীম্, <br> সুখদাং বরদাং মাতরম্।। <br> বন্দে মাতরম্। <br> <br> ​কোটীকোটীকণ্ঠ-কল-কল-নিনাদ করালে, <br> কোটীকোটীভুজৈধৃতখরকরবালে, <br> অবলা কেন মা এত বলে! <br> বহুবলধারিণীং নমামি তারিণীং <br> রিপুদলবারিণীং মাতরম্। <br> বন্দে মাতরম্। <br> <br> ​তুমি বিদ্যা তুমি ধর্ম্ম <br> তুমি হৃদি তুমি মর্ম্ম <br> ত্বং হি প্রাণাঃ শরীরে। <br> বাহুতে তুমি মা শক্তি, <br> হৃদয়ে তুমি মা ভক্তি, <br> তোমারই প্রতিমা গড়ি মন্দিরে মন্দিরে। <br> বন্দে মাতরম্। <br> <br> ​ত্বং হি দুর্গা দশপ্রহরণধারিণী <br> কমলা কমল-দলবিহারিণী <br> বাণী বিদ্যাদায়িনী নমামি ত্বাং <br> নমামি কমলাং অমলাং অতুলাম্, <br> সুজলাং সুফলাং মাতরম্ <br> বন্দে মাতরম্। <br> <br> শ্যামলাং সরলাং সুস্মিতাং ভূষিতাম্ <br> ধরণীং ভরণীং মাতরম্। <br> বন্দে মাতরম্। <br> বন্দে মাতরম্। <hr>", id: 6 }
+        ];
+
+        const container = document.getElementById('stanza-container');
+        let activeAudio = null;
+
+        function processLyrics(htmlText, id) {
+            const parts = htmlText.split('<hr>');
+            const actualParts = parts.filter(p => p.trim() !== "");
+            return `
+                <div id="part-segment-${id}" class="lyrics-part">${actualParts[0]}</div>
+                <div id="part-clip-${id}" class="lyrics-part active">${actualParts[1]}</div>
+                <div id="part-full-${id}" class="lyrics-part">${actualParts[2]}</div>
+            `;
+        }
+
+        for (let i = 1; i <= 6; i++) {
+            const section = document.createElement('div');
+            section.className = 'container';
+            section.id = `container-${i}`;
+            section.innerHTML = `
+                <div class="lyrics">${processLyrics(stanzas[i-1].text, i)}</div>
+                <div class="player-card">
+                    <div class="progress-container">
+                        <span id="current-time-${i}">0:00</span>
+                        <input type="range" id="progress-${i}" value="0" min="0" max="100" oninput="seekAudio(${i})">
+                        <span id="duration-${i}">0:00</span>
+                    </div>
+                </div>
+                <div class="button-group" id="btn-group-${i}">
+                    <button class="btn" id="btn-clip-${i}">Loading...</button>
+                    <button class="btn" id="btn-segment-${i}">Loading...</button>
+                    <button class="btn" id="btn-full-${i}">Loading...</button>
+                </div>
+                <audio id="audio-${i}" preload="auto"></audio>
+            `;
+            container.appendChild(section);
+            setupAudioEvents(i);
+            preloadStanza(i);
+        }
+
+        function setupAudioEvents(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const progress = document.getElementById(`progress-${id}`);
+            const curTimeTxt = document.getElementById(`current-time-${id}`);
+            const durTimeTxt = document.getElementById(`duration-${id}`);
+
+            audio.ontimeupdate = () => {
+                const val = (audio.currentTime / audio.duration) * 100;
+                progress.value = val || 0;
+                curTimeTxt.innerText = formatTime(audio.currentTime);
+                durTimeTxt.innerText = formatTime(audio.duration);
+            };
+
+            audio.onended = () => {
+                // গানের শেষে এখন আর resetUI কল হবে না
+                const btnClip = document.getElementById(`btn-clip-${id}`);
+                btnClip.innerText = "Play";
+            };
+        }
+
+        function preloadStanza(id) {
+            const btnClip = document.getElementById(`btn-clip-${id}`);
+            const btnSeg = document.getElementById(`btn-segment-${id}`);
+            const btnFull = document.getElementById(`btn-full-${id}`);
+            
+            let clipReady = false, segmentReady = false, fullReady = false;
+
+            const checkAllReady = () => {
+                if (clipReady && segmentReady && fullReady) {
+                    btnClip.innerText = "Clip";
+                    btnClip.onclick = () => playSong(id, 'clip');
+                    btnSeg.innerText = "Segment";
+                    btnSeg.onclick = () => playSong(id, 'segment');
+                    btnFull.innerText = "Full Song";
+                    btnFull.onclick = () => playSong(id, 'full');
+
+                    btnClip.classList.add('downloaded');
+                    btnSeg.classList.add('downloaded');
+                    btnFull.classList.add('downloaded');
+                }
+            };
+
+            const a1 = new Audio(musicData[id].clip);
+            const a2 = new Audio(musicData[id].segment);
+            const a3 = new Audio(musicData[id].full);
+
+            a1.oncanplaythrough = () => { clipReady = true; checkAllReady(); };
+            a2.oncanplaythrough = () => { segmentReady = true; checkAllReady(); };
+            a3.oncanplaythrough = () => { fullReady = true; checkAllReady(); };
+        }
+
+        function playSong(id, type) {
+            const audio = document.getElementById(`audio-${id}`);
+            const btnClip = document.getElementById(`btn-clip-${id}`);
+
+            document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
+            document.getElementById(`container-${id}`).style.display = 'block';
+            document.getElementById('main-title').style.display = 'none';
+
+            document.querySelectorAll(`#container-${id} .lyrics-part`).forEach(p => p.classList.remove('active'));
+            document.getElementById(`part-${type}-${id}`).classList.add('active');
+
+            if (activeAudio === audio && audio.dataset.currentType === type) {
+                if (!audio.paused) {
+                    audio.pause();
+                    btnClip.innerText = "Play";
+                } else {
+                    audio.play();
+                    btnClip.innerText = "Pause";
+                }
+                return;
+            }
+
+            if (activeAudio && activeAudio !== audio) {
+                const prevId = activeAudio.id.split('-')[1];
+                stopAndResetButtons(prevId);
+            }
+
+            audio.src = musicData[id][type];
+            audio.dataset.currentType = type;
+            activeAudio = audio;
+            audio.play();
+
+            updateControls(id);
+        }
+
+        function updateControls(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const btnClip = document.getElementById(`btn-clip-${id}`);
+            const btnSeg = document.getElementById(`btn-segment-${id}`);
+            const btnFull = document.getElementById(`btn-full-${id}`);
+
+            btnClip.innerText = "Pause";
+            btnClip.onclick = () => {
+                if (audio.paused) {
+                    audio.play();
+                    btnClip.innerText = "Pause";
+                } else {
+                    audio.pause();
+                    btnClip.innerText = "Play";
+                }
+            };
+
+            btnSeg.innerText = "Reset";
+            btnSeg.onclick = () => resetUI(id);
+
+            btnFull.innerText = "Replay";
+            btnFull.onclick = () => {
+                audio.currentTime = 0;
+                audio.play();
+                btnClip.innerText = "Pause";
+            };
+        }
+
+        // এটি কেবল অন্য স্ট্যাঞ্জা প্লে করার সময় আগেরটিকে থামানোর জন্য
+        function stopAndResetButtons(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            audio.pause();
+            audio.currentTime = 0;
+            
+            const btnClip = document.getElementById(`btn-clip-${id}`);
+            const btnSeg = document.getElementById(`btn-segment-${id}`);
+            const btnFull = document.getElementById(`btn-full-${id}`);
+            
+            btnClip.innerText = "Clip";
+            btnClip.onclick = () => playSong(id, 'clip');
+            btnSeg.innerText = "Segment";
+            btnSeg.onclick = () => playSong(id, 'segment');
+            btnFull.innerText = "Full Song";
+            btnFull.onclick = () => playSong(id, 'full');
+        }
+
+        function resetUI(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            audio.pause();
+            audio.currentTime = 0;
+            audio.dataset.currentType = "";
+            activeAudio = null;
+
+            document.querySelectorAll('.container').forEach(c => c.style.display = 'block');
+            document.getElementById('main-title').style.display = 'block';
+
+            document.querySelectorAll('.lyrics-part').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('[id^="part-clip-"]').forEach(p => p.classList.add('active'));
+
+            const btnClip = document.getElementById(`btn-clip-${id}`);
+            const btnSeg = document.getElementById(`btn-segment-${id}`);
+            const btnFull = document.getElementById(`btn-full-${id}`);
+            
+            btnClip.innerText = "Clip";
+            btnClip.onclick = () => playSong(id, 'clip');
+            
+            btnSeg.innerText = "Segment";
+            btnSeg.onclick = () => playSong(id, 'segment');
+            
+            btnFull.innerText = "Full Song";
+            btnFull.onclick = () => playSong(id, 'full');
+
+            document.getElementById(`current-time-${id}`).innerText = "0:00";
+            document.getElementById(`progress-${id}`).value = 0;
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            let min = Math.floor(seconds / 60);
+            let sec = Math.floor(seconds % 60);
+            return `${min}:${sec < 10 ? '0' + sec : sec}`;
+        }
+
+        function seekAudio(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const progress = document.getElementById(`progress-${id}`);
+            if (audio.duration) {
+                audio.currentTime = (progress.value / 100) * audio.duration;
+            }
+        }
+    </script>
+</body>
+</html>
