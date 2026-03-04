@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Prayer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px;
+            margin: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-bottom: 5px solid #000;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+        }
+        .header-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        .lyrics {
+            padding: 0 20px;
+            line-height: 1.6;
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+        .player-card {
+            background-color: #fff5f5;
+            margin: 15px 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .progress-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        input[type="range"] {
+            flex-grow: 1;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-around;
+            padding: 0 10px;
+            gap: 5px;
+        }
+        .btn {
+            background: #808080; 
+            color: white;
+            border: 2px solid #555;
+            border-radius: 25px;
+            padding: 8px 0;
+            width: 24%;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .btn.downloaded {
+            background: #28a745 !important;
+            border-color: #1e7e34;
+        }
+        .btn:active {
+            transform: translateY(2px);
+        }
+        .lyrics-part { display: none; }
+        .lyrics-part.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="header-title" id="main-title">Questions About Me<br>English</div>
+    <div id="stanza-container"></div>
+
+    <script>
+        // বাটন অনুযায়ী মিউজিক সোর্স কী আপডেট করা হয়েছে
+        const musicData = {
+            1: { qaclip: 'https://www.dropbox.com/scl/fi/zovc6bhnknify2vpb2rye/MeEng1QAClip.mp3?rlkey=s8zpu2t6wg5ejs9mqolg3ca6s&st=kq0il4nk&raw=1', qasegment: 'https://www.dropbox.com/scl/fi/xnwjlmm033iipcvp4wfzl/MeEng1QASegment.mp3?rlkey=tezbzovzn3q82tl930l0n7na0&st=876yzz98&raw=1', qclip: 'https://www.dropbox.com/scl/fi/qafmoigh3p6o51ranvkf3/MeEng1QClip.mp3?rlkey=zecod19pgpy29b0uq0hyikemn&st=nxpnhsy8&raw=1', qsegment: 'https://www.dropbox.com/scl/fi/5dahx42e3m7s0ju76feeb/MeEng1QSegment.mp3?rlkey=nbhipucixztcci25da67jq5ac&st=ic9klc8v&raw=1' },
+            2: { qaclip: 'https://www.dropbox.com/scl/fi/4glah8j8pkrfeld1r8dg7/MeEng2QAClip.mp3?rlkey=aft3ketuywvn08fntdx9gjcl7&st=w35ekhzv&raw=1', qasegment: 'https://www.dropbox.com/scl/fi/wf0lnpggp7x76qyvxk47w/MeEng2QASegment.mp3?rlkey=hxqs6wxw0el1pps5i64dtb00w&st=lkeym79q&raw=1', qclip: 'https://www.dropbox.com/scl/fi/9ac19qssv2ejp1z1tp499/MeEng2QClip.mp3?rlkey=ossaa5z6gvr715aeed837fhau&st=4lnuhvjo&raw=1', qsegment: 'https://www.dropbox.com/scl/fi/5oa3darbsihy8xg7klvg8/MeEng2QSegment.mp3?rlkey=iv2jnjspk451c61khu9ql1ft3&st=lbxo2ft6&raw=1' },
+            3: { qaclip: 'https://www.dropbox.com/scl/fi/1uprxul2n7ym0k27xmpk1/MeEng3QAClip.mp3?rlkey=7gnrzq9dj5uidkzw4gn688fmd&st=j4v9yt8h&raw=1', qasegment: 'https://www.dropbox.com/scl/fi/sxmhc8mll7j7fvoidnzjg/MeEng3QASegment.mp3?rlkey=w8dxfihg70kn4yodqgnlvrlnx&st=k83y80ir&raw=1', qclip: 'https://www.dropbox.com/scl/fi/36i0hhfhrwprg0yp4zt3u/MeEng3QClip.mp3?rlkey=1ccd6udfd8vzltzzbvj1dkjuu&st=fpjea97z&raw=1', qsegment: 'https://www.dropbox.com/scl/fi/vosxtewk9jagbfzkn50bm/MeEng3QSegment.mp3?rlkey=q4q0byey9oyd0hgy4yce2dkzc&st=nemcjjye&raw=1' },
+            4: { qaclip: 'https://www.dropbox.com/scl/fi/em9w0nynef7d96mpf3pt8/MeEng4QAClip.mp3?rlkey=jlzqng6fby4iscqpju9iiewpc&st=kembxoi5&raw=1', qasegment: 'https://www.dropbox.com/scl/fi/v47slnm6ythcd4rjcn6w9/MeEng4QASegment.mp3?rlkey=w3wch2d3l06k62zx7464fqnwl&st=6scaknjx&raw=1', qclip: 'https://www.dropbox.com/scl/fi/4uv4spk6vaf5q0gzieum9/MeEng4QClip.mp3?rlkey=wbykik4bfz63yuu644jur0pvt&st=xhv0q5gj&raw=1', qsegment: 'https://www.dropbox.com/scl/fi/q4yyzkoiha5vmzdeosv6r/MeEng4QSegment.mp3?rlkey=ts1t58qjthq0yq8bow3oujsw9&st=5dz9bhh7&raw=1' },
+            5: { qaclip: 'https://www.dropbox.com/scl/fi/q7xmfz51zto3cm4qpqs7k/MeEng5QAClip.mp3?rlkey=wrr6p2lopyyj04fxf5zsuetds&st=okyqb09x&raw=1', qasegment: 'https://www.dropbox.com/scl/fi/x6aevpu06v14p16npbzme/MeEng5QASegment.mp3?rlkey=c6vvoyx6gjhzsgcdbah7j4sjp&st=phfzfedb&raw=1', qclip: 'https://www.dropbox.com/scl/fi/1muyjl86cls4j6d2ybl4v/MeEng5QClip.mp3?rlkey=jjg9hhi98dc8b9tl0pis5kgkl&st=znpewve2&raw=1', qsegment: 'https://www.dropbox.com/scl/fi/nhycsea4hl5lg5aflbor6/MeEng5QSegment.mp3?rlkey=1e87j6cnur591k6czg7bc7dbp&st=zlwla8dd&raw=1' },
+            6: { qaclip: 'https://www.dropbox.com/scl/fi/oba5iaxrwkr8s8gsbrvyd/MeEng6QAClip.mp3?rlkey=zff2pdupqfq4w0jiitvqzouq8&st=brmm1rrg&raw=1', qasegment: 'https://www.dropbox.com/scl/fi/qt6ti5p2p47sdg1obtkqb/MeEng6QASegment.mp3?rlkey=p70vj7lp1hpy7vs98d1o9t10p&st=9jp9kpx6&raw=1', qclip: 'https://www.dropbox.com/scl/fi/hvy4bsv9oicrgkwxy9psi/MeEng6QClip.mp3?rlkey=ahtfwcepic2h85bvn4y0nsuim&st=zz7amn1a&raw=1', qsegment: 'https://www.dropbox.com/scl/fi/m6kwgrodvm9v7i70wg9fn/MeEng6QSegment.mp3?rlkey=9rm79vxn9y8p82tl7ugg3uy00&st=ojejpaj5&raw=1' },
+            7: { qaclip: 'https://www.dropbox.com/scl/fi/govfk7j6fj8krn01bnhm3/MeEng7QAClip.mp3?rlkey=q93ojwcnh6jggtys64svyszuw&st=ot88dlw0&raw=1', qasegment: 'https://www.dropbox.com/scl/fi/2fi8hmt8azrctmy4l0tpa/MeEng7QASegment.mp3?rlkey=2r09eq438g9lgjsg24sua1zpy&st=9tu14kax&raw=1', qclip: 'https://www.dropbox.com/scl/fi/hlnczwklp0xms1hgghz3c/MeEng7QClip.mp3?rlkey=yr1upcv32hrl9qo3tay5zx83j&st=hjlqrqjk&raw=1', qsegment: 'https://www.dropbox.com/scl/fi/k8p8cio4rrh4r2wawerym/MeEng7QSegment.mp3?rlkey=6niyzmjq515za7jlpi88txjae&st=rl645dot&raw=1' },
+            8: { qaclip: 'https://www.dropbox.com/scl/fi/ptcomifdblk95vu2ybbxh/MeEng8QAClip.mp3?rlkey=ibqawqdg0f5yysl66twhymag0&st=a7pupmmj&raw=1', qasegment: 'https://www.dropbox.com/scl/fi/0g4yz8ipxyh4muvdykzj1/MeEng8QASegment.mp3?rlkey=13cjgoi17f1ism8ztl5o99zak&st=s2enkww7&raw=1', qclip: 'https://www.dropbox.com/scl/fi/bhzh87rzdif4nnpn30gea/MeEng8QClip.mp3?rlkey=92y9pqou1qan90hnfgzw9906q&st=tvaedkvh&raw=1', qsegment: 'https://www.dropbox.com/scl/fi/nptluen9d70ert8db9fwn/MeEng8QSegment.mp3?rlkey=amyhn7onafmoue3atweff5lbl&st=3scppnb7&raw=1' },
+            9: { qaclip: 'https://www.dropbox.com/scl/fi/f2rqt7yunzbyfcfan1vsf/MeEng9QAClip.mp3?rlkey=81jl5znv6tbda2lu260p5ecrf&st=53g0xjt6&raw=1', qasegment: 'https://www.dropbox.com/scl/fi/71is4t20bkde0qwk9omoe/MeEng9QASegment.mp3?rlkey=bften3wwwt5a91i83x2xuyyze&st=v7eepyeu&raw=1', qclip: 'https://www.dropbox.com/scl/fi/f09qd0temnona1zpf0ni9/MeEng9QClip.mp3?rlkey=4egi7lrcvdymkfatblx6ppymz&st=ss3mnn6c&raw=1', qsegment: 'https://www.dropbox.com/scl/fi/y79nla976mgjcoruygqei/MeEng9QSegment.mp3?rlkey=xvlzzijkz9wxhal60ug57yn35&st=semg2mik&raw=1' }
+        };
+
+        const stanzas = [
+            { text: " <hr> What is your name?<br> My name is Shyamal Chandra Roy. <hr> What is your name?<br> My name is Shyamal Chandra Roy. <hr> What is your name?<br> My name is Shyamal Chandra Roy. <hr> ", id: 1 }, { text: " <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy. <hr> What is your father's name?<br> My father's name is Amal Chandra Roy. <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy. <hr> ", id: 2 }, { text: " <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy. <hr> What is your mother's name?<br> My mother's name is Kanika Rani Roy. <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy. <hr> ", id: 3}, { text: " <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj. <hr> Where do you live?<br> I live in Ramganj. <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj. <hr> ", id: 4}, { text: " <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj.<br><br> What is your school's name?<br> ​My school's name is Ramganj Primary School. <hr> What is your school's name?<br> ​My school's name is Ramganj Primary School. <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj.<br><br> What is your school's name?<br> ​My school's name is Ramganj Primary School. <hr> ", id: 5 }, { text: " <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj.<br><br> What is your school's name?<br> ​My school's name is Ramganj Primary School.<br><br> In which class do you study?<br> I study in class three. <hr> In which class do you study?<br> I study in class three. <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj.<br><br> What is your school's name?<br> ​My school's name is Ramganj Primary School.<br><br> In which class do you study?<br> I study in class three. <hr> ", id: 6 }, { text: " <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj.<br><br> What is your school's name?<br> ​My school's name is Ramganj Primary School.<br><br> In which class do you study?<br> I study in class three.<br><br> How old are you?<br> I am nine years old. <hr> How old are you?<br> I am nine years old. <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj.<br><br> What is your school's name?<br> ​My school's name is Ramganj Primary School.<br><br> In which class do you study?<br> I study in class three.<br><br> How old are you?<br> I am nine years old. <hr> ", id: 7 }, { text: " <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj.<br><br> What is your school's name?<br> ​My school's name is Ramganj Primary School.<br><br> In which class do you study?<br> I study in class three.<br><br> How old are you?<br> I am nine years old.<br><br> What is your favorite subject?<br> My favorite subject is English. <hr> What is your favorite subject?<br> My favorite subject is English. <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj.<br><br> What is your school's name?<br> ​My school's name is Ramganj Primary School.<br><br> In which class do you study?<br> I study in class three.<br><br> How old are you?<br> I am nine years old.<br><br> What is your favorite subject?<br> My favorite subject is English. <hr> ", id: 8}, { text: " <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj.<br><br> What is your school's name?<br> ​My school's name is Ramganj Primary School.<br><br> In which class do you study?<br> I study in class three.<br><br> How old are you?<br> I am nine years old.<br><br> What is your favorite subject?<br> My favorite subject is English.<br><br> What is your favorite color?<br> My favorite color is Red. <hr> What is your favorite color?<br> My favorite color is Red. <hr> What is your name?<br> My name is Shyamal Chandra Roy.<br><br> What is your father's name?<br> My father's name is Amal Chandra Roy.<br><br> What is your mother's name?<br> My mother's name is Kanika Rani Roy.<br><br> Where do you live?<br> I live in Ramganj.<br><br> What is your school's name?<br> ​My school's name is Ramganj Primary School.<br><br> In which class do you study?<br> I study in class three.<br><br> How old are you?<br> I am nine years old.<br><br> What is your favorite subject?<br> My favorite subject is English.<br><br> What is your favorite color?<br> My favorite color is Red. <hr> ", id: 9 }
+            
+        ];
+
+        const container = document.getElementById('stanza-container');
+        let activeAudio = null;
+
+        function processLyrics(htmlText, id) {
+            const parts = htmlText.split('<hr>');
+            const actualParts = parts.filter(p => p.trim() !== "");
+            // part1: প্রথম অংশ, part2: দ্বিতীয় অংশ, full: তৃতীয় অংশ
+            return `
+                <div id="part-1-${id}" class="lyrics-part">${actualParts[0]}</div>
+                <div id="part-2-${id}" class="lyrics-part active">${actualParts[1]}</div>
+                <div id="part-3-${id}" class="lyrics-part">${actualParts[2]}</div>
+            `;
+        }
+
+        for (let i = 1; i <= 9; i++) {
+            const section = document.createElement('div');
+            section.className = 'container';
+            section.id = `container-${i}`;
+            section.innerHTML = `
+                <div class="lyrics">${processLyrics(stanzas[i-1].text, i)}</div>
+                <div class="player-card">
+                    <div class="progress-container">
+                        <span id="current-time-${i}">0:00</span>
+                        <input type="range" id="progress-${i}" value="0" min="0" max="100" oninput="seekAudio(${i})">
+                        <span id="duration-${i}">0:00</span>
+                    </div>
+                </div>
+                <div class="button-group" id="btn-group-${i}">
+                    <button class="btn" id="btn-qaclip-${i}">Loading...</button>
+                    <button class="btn" id="btn-qasegment-${i}">Loading...</button>
+                    <button class="btn" id="btn-qclip-${i}">Loading...</button>
+                    <button class="btn" id="btn-qsegment-${i}">Loading...</button>
+                </div>
+                <audio id="audio-${i}" preload="auto"></audio>
+            `;
+            container.appendChild(section);
+            setupAudioEvents(i);
+            preloadStanza(i);
+        }
+
+        function setupAudioEvents(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const progress = document.getElementById(`progress-${id}`);
+            const curTimeTxt = document.getElementById(`current-time-${id}`);
+            const durTimeTxt = document.getElementById(`duration-${id}`);
+
+            audio.ontimeupdate = () => {
+                const val = (audio.currentTime / audio.duration) * 100;
+                progress.value = val || 0;
+                curTimeTxt.innerText = formatTime(audio.currentTime);
+                durTimeTxt.innerText = formatTime(audio.duration);
+            };
+
+            audio.onended = () => {
+                const btnQAClip = document.getElementById(`btn-qaclip-${id}`);
+                btnQAClip.innerText = "QAClip";
+            };
+        }
+
+        function preloadStanza(id) {
+            const btnQAClip = document.getElementById(`btn-qaclip-${id}`);
+            const btnQASeg = document.getElementById(`btn-qasegment-${id}`);
+            const btnQCli = document.getElementById(`btn-qclip-${id}`);
+            const btnQSeg = document.getElementById(`btn-qsegment-${id}`);
+            
+            let qaclipRdy = false, qasegRdy = false, qcliRdy = false, qsegRdy = false;
+
+            const checkReady = () => {
+                if (qaclipRdy && qasegRdy && qcliRdy && qsegRdy) {
+                    btnQAClip.innerText = "QAClip";
+                    btnQAClip.onclick = () => playSong(id, 'qaclip');
+                    btnQASeg.innerText = "QASegment";
+                    btnQASeg.onclick = () => playSong(id, 'qasegment');
+                    btnQCli.innerText = "QClip";
+                    btnQCli.onclick = () => playSong(id, 'qclip');
+                    btnQSeg.innerText = "QSegment";
+                    btnQSeg.onclick = () => playSong(id, 'qsegment');
+
+                    [btnQAClip, btnQASeg, btnQCli, btnQSeg].forEach(b => b.classList.add('downloaded'));
+                }
+            };
+
+            new Audio(musicData[id].qaclip).oncanplaythrough = () => { qaclipRdy = true; checkReady(); };
+            new Audio(musicData[id].qasegment).oncanplaythrough = () => { qasegRdy = true; checkReady(); };
+            new Audio(musicData[id].qclip).oncanplaythrough = () => { qcliRdy = true; checkReady(); };
+            new Audio(musicData[id].qsegment).oncanplaythrough = () => { qsegRdy = true; checkReady(); };
+        }
+
+        function playSong(id, type) {
+            const audio = document.getElementById(`audio-${id}`);
+            const btnQAClip = document.getElementById(`btn-qaclip-${id}`);
+
+            document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
+            document.getElementById(`container-${id}`).style.display = 'block';
+            document.getElementById('main-title').style.display = 'none';
+
+            // লিরিক্স ডিসপ্লে লজিক আপডেট
+            document.querySelectorAll(`#container-${id} .lyrics-part`).forEach(p => p.classList.remove('active'));
+            
+            if (type === 'qaclip' || type === 'qclip') {
+                document.getElementById(`part-2-${id}`).classList.add('active'); // দ্বিতীয় অংশ
+            } else if (type === 'qasegment' || type === 'qsegment') {
+                document.getElementById(`part-1-${id}`).classList.add('active'); // প্রথম অংশ
+            }
+
+            if (activeAudio === audio && audio.dataset.currentType === type) {
+                if (!audio.paused) {
+                    audio.pause();
+                    btnQAClip.innerText = "Play";
+                } else {
+                    audio.play();
+                    btnQAClip.innerText = "Pause";
+                }
+                return;
+            }
+
+            if (activeAudio && activeAudio !== audio) {
+                stopAndResetButtons(activeAudio.id.split('-')[1]);
+            }
+
+            audio.src = musicData[id][type];
+            audio.dataset.currentType = type;
+            activeAudio = audio;
+            audio.play();
+
+            updateControls(id);
+        }
+
+        function updateControls(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const btnQAClip = document.getElementById(`btn-qaclip-${id}`);
+            const btnQASeg = document.getElementById(`btn-qasegment-${id}`);
+            const btnQCli = document.getElementById(`btn-qclip-${id}`);
+            const btnQSeg = document.getElementById(`btn-qsegment-${id}`);
+
+            btnQAClip.innerText = "Pause";
+            btnQAClip.onclick = () => {
+                if (audio.paused) { audio.play(); btnQAClip.innerText = "Pause"; }
+                else { audio.pause(); btnQAClip.innerText = "Play"; }
+            };
+
+            btnQASeg.innerText = "Reset";
+            btnQASeg.onclick = () => resetUI(id);
+
+            btnQCli.innerText = "Replay";
+            btnQCli.onclick = () => { audio.currentTime = 0; audio.play(); btnQAClip.innerText = "Pause"; };
+
+            btnQSeg.innerText = "Stop"; 
+            btnQSeg.onclick = () => { audio.pause(); audio.currentTime = 0; btnQAClip.innerText = "Play"; };
+        }
+
+        function stopAndResetButtons(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            audio.pause();
+            audio.currentTime = 0;
+            
+            const btnQAClip = document.getElementById(`btn-qaclip-${id}`);
+            const btnQASeg = document.getElementById(`btn-qasegment-${id}`);
+            const btnQCli = document.getElementById(`btn-qclip-${id}`);
+            const btnQSeg = document.getElementById(`btn-qsegment-${id}`);
+            
+            btnQAClip.innerText = "QAClip";
+            btnQAClip.onclick = () => playSong(id, 'qaclip');
+            btnQASeg.innerText = "QASegment";
+            btnQASeg.onclick = () => playSong(id, 'qasegment');
+            btnQCli.innerText = "QClip";
+            btnQCli.onclick = () => playSong(id, 'qclip');
+            btnQSeg.innerText = "QSegment";
+            btnQSeg.onclick = () => playSong(id, 'qsegment');
+        }
+
+        function resetUI(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            audio.pause();
+            audio.currentTime = 0;
+            audio.dataset.currentType = "";
+            activeAudio = null;
+
+            document.querySelectorAll('.container').forEach(c => c.style.display = 'block');
+            document.getElementById('main-title').style.display = 'block';
+
+            document.querySelectorAll('.lyrics-part').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('[id^="part-2-"]').forEach(p => p.classList.add('active'));
+
+            stopAndResetButtons(id);
+
+            document.getElementById(`current-time-${id}`).innerText = "0:00";
+            document.getElementById(`progress-${id}`).value = 0;
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            let min = Math.floor(seconds / 60);
+            let sec = Math.floor(seconds % 60);
+            return `${min}:${sec < 10 ? '0' + sec : sec}`;
+        }
+
+        function seekAudio(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const progress = document.getElementById(`progress-${id}`);
+            if (audio.duration) {
+                audio.currentTime = (progress.value / 100) * audio.duration;
+            }
+        }
+    </script>
+</body>
+</html>
